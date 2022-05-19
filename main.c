@@ -1,42 +1,30 @@
 /*
-Uzdevuma risināšanā lūdzu neizmantot "string" un "long long" tipus; goto; malloc.
+Funkcionāli:
 
-Uzdevums ir vienkāršs bez īpašiem slēptiem “zemūdens akmeņiem” un domāts C pamat zināšanu un koda veidošanas struktūras iemaņu pārbaudei.
+Ievadot korektu kartes numuru kas nav atrodams iekš file.txt (piem. 6100000000000000), netiek paradīts kļūdas ziņojums (No uzdevuma nostadnes:
+    Ja kartes numurs ievadīts nekorekti, uz ekrāna izvadīt atbilstošu paziņojumu un atgriezties pie kartes numura ievades.)         Done
 
-Uzdevums.
+Ievadot derīgu kartes numuru un maksimāli garu summu (1234.56) trans.txt failā netiek saglabats kartes numurs (veidojas šādi ieraksti: VISA 1234.56)
+                                                                                                                                    Done
 
-Pievienotajā .txt failā atrodas karšu numuru tabula, kurā atrodas sekojoši lauki: 1. Range Start; 2. Range End; 3 Name.
+Pārsniedzot atļauto sumams garumu, netiek paradīts kļudas ziņojums, bet summa tiek pieņemta un saglabāta failā nogriežot ‘lieko’ daļu: 1234.567 -> 1234.56 un nesaglābajot kartes numuru
+    (sk. #2). Tas pats ar pārāk īsām summām, bez daļas aiz komata: piem 2, 20, 200, 2000                                            Done
+Ievadot ‘too long’ kartes numuru (piem. 2048-byte long ciparu virkni) programma nokrešo.
 
-[Range Start] un [Range End] lauki var būt no 1 līdz 16 simbolu (ciparu) gari.
+Pie tukša file.txt faila, vai arī ja failā ir nekorekti ieraksti (piem. Nav low-high range i.e. ;;VISA; ) netiek izvadīts kļūdas paziņojums.
+                                                                                                                                    Done
 
-Programmas uzdevums būtu sekojošs:
 
-1. Pieprasīt ievadīt 16 ciparus garu kartes numuru.
+Par kodu:
 
-    Kartes numura ievadei, pārbaudei un apstrādei jāizmanto char[n] tips (simbolu masīvs), lai pārbaudītu zināšanas par masīviem un norādēm (pointer).
-
-    Ja kartes numurs ievadīts nekorekti, uz ekrāna izvadīt atbilstošu paziņojumu un atgriezties pie kartes numura ievades.
-
-2. Pārbaudīt, vai ieraksts, kas atbilst ievadītajam kartes numuram, atrodams teksta failā (pārbaudīt pēc ievadītā numura pirmajiem n cipariem, kur n=ciparu skaits attiecīgajā kolonā failā file.txt). Piemēram, faila pirmā rinda satur sekojošu informāciju:"400000000000;499999999999;VISA;" Tas nozīmē, ka ievadītais kartes numurs atbilst šai rindai, ja skaitlis, kas atbilst tā pirmajiem 12 cipariem >=400000000000 un <=499999999999. Ja ievadītais numurs neatbilst nevienai rindai failā, 2 sekundes uz ekrāna parādīt brīvi izvēlētu kļūdas paziņojumu un atgriezties uz punktu 1.
-
-3. Pieprasīt ievadīt summu formātā "nnnn.mm", kur nnnn- 1 līdz 4 ciparu gara summa eiro, bet mm - 2 ciparu summa centos.
-
-    Ja summa ievadīta nekorekti, uz ekrāna izvadīt atbilstošu paziņojumu un atgriezties pie summa ievades.
-
-4. Saglabāt failā "trans.txt" ievadīto kartes numuru, numuram atbilstošo "Name" lauku no file.txt un ievadīto summu.
-
-5. Atgriezties uz punktu 1.
-
-Ja ir kādas neskaidrības par uzdevuma nostādni, dod ziņu un centīšos izskaidrot nesaprotamās lietas.
-
-Laika limita uzdevuma izpildei nav, galvenais ir kvalitāte!
-
-Lai veicās!
-*/
+Būtu jāizvaidās no float/double/... datu tipu izmantošanas. Jāoperē ar texta datiem                                                 Done
+Iekš get_card_number(): scanf("%s", buf); netiek ierobežots nolasāmo datu garums, kas neļauj pasargāties pret buffer overflow.      Done
+Iekš main(): file_pointer netiek aizvērts pēc darbības pabeigšanas.                                                                 Done
+length_of_char() funkcijas vietā varēja izmantot standarta strlen() ? vai ir kaut kādas īpatnības, ko standarta funkcija nedara?    Done
+ */
 
 #include <stdio.h>
 #include <unistd.h>
-#include <stdlib.h>
 
 #define MAX_CARD_TYPES 10
 
@@ -46,15 +34,6 @@ typedef struct {
     char card_name[11];
 } card_types;
 
-// Inputs the array, counts the characters and returns an int value
-int length_of_char(const char *str) {
-    int i = 0;
-    while (str[i] != '\0') {
-        i++;
-    }
-    return i;
-}
-
 // Checks whenever the char is valid character
 int is_digit_or_letter(char c) {
     return ((c >= '0' && c <= '9') ||
@@ -62,63 +41,67 @@ int is_digit_or_letter(char c) {
             (c >= 'A' && c <= 'Z'));
 }
 
-
 // Inputs the card number array and checks whenever its a valid card number
 int validate_card_number(const char *input) {
     int err = 0;
-    if (length_of_char(input)!=16){
+    if (strlen(input)>16){
         err = 1;
+        return err;
+    }else if(strlen(input)<16){
+        err = 2;
         return err;
     }
     for (int n = 0; n < 16; n++) {
         if (!(input[n] >= '0' && input[n] <= '9')) {
-            err = 1;
+            err = 3;
             break;
         }
     }
     return err;
 }
 
-
 // Compares the card number to min and max to see if it fits a card type
-int compare_numbers(const char *card_number,const char *min,const char *max,int parse_limit){
+int compare_numbers(const char *card_number,const char *min,const char *max){
+    int bigger_than_min = 0;
+    int smaller_than_max = 0;
 
-    int err = 0;
-    char *stop_array;
-    char temp_card_double[17];
-    char temp_min[17];
-    char temp_max[17];
-
-    // Fully optional step, just makes me feel better not having a double with 16 digits.
-    for (int x=0; x<parse_limit+1;x++){
-        if(x==3){
-            temp_card_double[x] = ',';
-            temp_min[x] = ',';
-            temp_max[x] = ',';
-        }else{
-            temp_card_double[x] = card_number[x];
-            temp_min[x] = min[x];
-            temp_max[x] = max[x];
+    for(int x =0;x<strlen(min);x++){
+        if(card_number[x] > min[x]){
+            bigger_than_min = 1;
+            break;
+        }
+        if(card_number[x] < min[x]){
+            break;
+        }
+        if(x+1==strlen(min)){
+            bigger_than_min = 1;
         }
     }
 
-    // Comparing the numbers by simply converting the array to a Double type
-    if (!(strtod(temp_card_double,&stop_array) >= strtod(temp_min,&stop_array) && strtod(temp_card_double,&stop_array) <= strtod(temp_max,&stop_array))) {
-        err = 1;
+    for(int y =0;y<strlen(max);y++){
+        if(card_number[y] < max[y]){
+            smaller_than_max = 1;
+            break;
+        }
+        if(card_number[y] > max[y]){
+            break;
+        }
+        if(y+1==strlen(max)){
+            smaller_than_max = 1;
+        }
     }
 
-    return err;
+    return bigger_than_min == smaller_than_max;
 }
 
-
 // Checks whenever the withdraw amount is valid and accepts both dot and comma
-int validate_withdraw_amount(const char *input) {
+int validate_withdraw_amount(char *input) {
     int err = 0;
     int count_euros=0;
     int count_cents=0;
     int count_dot=0;
     int flag = 0;
-    for (int n = 0; n < length_of_char(input); n++) {
+    for (int n = 0; n < strlen(input); n++) {
         if (!(input[n] >= '0' && input[n] <= '9' || input[n] == ',' || input[n] == '.')) {
             err = 1;
             break;
@@ -136,13 +119,22 @@ int validate_withdraw_amount(const char *input) {
             }
         }
     }
+    if(count_euros==0){
+        err = 1;
+        return err;
+    }
+    if(count_dot == 0){
+        input[(count_euros)] = '.';
+    }
+    if(count_cents < 2){
+        if (count_cents == 1){
+            input[(count_euros + 2)] = '0';
+        }else{
+            input[(count_euros + 1)] = '0';
+            input[(count_euros + 2)] = '0';
+        }
+    }
     return err;
-}
-
-// frees up the stdin so it dosent overflow and inpact the next card number entry
-void flush_stdin() {
-    int c;
-    while ((c = fgetc(stdin)) != '\n' && c != EOF); /* Flush stdin */
 }
 
 // asks the user to input the card number
@@ -150,14 +142,19 @@ void get_card_number(char *buf) {
     for (;;) {
         printf("Enter card number (16 digits) \n");
 
-        scanf("%s", buf);
-        flush_stdin();
+        scanf("%17s", buf);
+        fflush(stdin);
 
         if (validate_card_number(buf) == 0) {
             break;
+        }else if(validate_card_number(buf) == 1){
+            printf("The card number was too long \n");
+        }else if(validate_card_number(buf) == 2){
+            printf("The card number was too short \n");
+        }else{
+            printf("Card was entered in incorrectly \n");
         }
-        printf("Card was entered in incorrectly \n");
-        usleep(2000000);
+        sleep(2);
     }
 }
 
@@ -166,21 +163,23 @@ void get_withdraw_amount(char *withdraw) {
     for (;;) {
         printf("Enter the amount you wish to withdraw [format 'nnnn.mm'] \n");
 
-        scanf("%7s", withdraw);
-        flush_stdin();
+        scanf("%8s", withdraw);
+        fflush(stdin);
 
         if (validate_withdraw_amount(withdraw) == 0) {
             break;
         }
         printf("Withdraw was entered in incorrectly \n");
+        memset(withdraw,0,8);
+        sleep(1);
     }
 }
-
 
 int main() {
     int separator_count = 0;
     int counter = 0;
     int card_type_counter = 0;
+    int check_if_types_present = 0;
 
     char ch;
     FILE *file_pointer = fopen("file.txt", "r");
@@ -199,8 +198,16 @@ int main() {
             separator_count++;
             counter = 0;
             if (separator_count == 3) {
-                separator_count = 0;
-                card_type_counter++;
+                if(card_types[card_type_counter].min_number[0] != '\0' && card_types[card_type_counter].max_number[0] != '\0' && card_types[card_type_counter].card_name[0] != '\0' ){
+                    check_if_types_present=1;
+                    card_type_counter++;
+                    separator_count = 0;
+                }else{
+                    memset(card_types[card_type_counter].min_number,0,11);
+                    memset(card_types[card_type_counter].max_number,0,17);
+                    memset(card_types[card_type_counter].card_name,0,17);
+                    separator_count = 0;
+                }
             }
         } else if (is_digit_or_letter(ch)) {
             switch (separator_count) {
@@ -219,23 +226,29 @@ int main() {
             counter += 1;
         }
     }
+    fclose(file_pointer);
+
+    if(check_if_types_present==0){
+        printf("The file dose not contain any usable data \n");
+        system("pause");
+    }
 
     // repeated loop that asks the user to input values and saves them in the file trans.txt
-    while (counter!=1) {
+    while (check_if_types_present!=0) {
         int card_type_index = -1; // -1 not found
         char card_number[17] = {0};
         get_card_number(card_number);
 
         for (int n = 0; n < card_type_counter; n++) {
 
-            if (compare_numbers(card_number,card_types[n].min_number,card_types[n].max_number,length_of_char(card_types[n].max_number))!=1) {
+            if (compare_numbers(card_number,card_types[n].min_number,card_types[n].max_number)==1) {
                 card_type_index = n;
                 break;
             }
         }
         if(card_type_index != -1){
             for(;;){
-                char withdraw_amount[7] = {0};
+                char withdraw_amount[9] = {0};
                 get_withdraw_amount(withdraw_amount);
 
                 FILE * fptr;
@@ -243,10 +256,11 @@ int main() {
 
                 fprintf(fptr,"%s %s %s \n",card_number,card_types[card_type_index].card_name,withdraw_amount);
                 fclose(fptr);
-
-
                 break;
             }
+        }else{
+            printf("Card was not found in the providers list \n");
+            sleep(2);
         }
 
     }
