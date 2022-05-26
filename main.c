@@ -43,21 +43,17 @@ int is_digit_or_letter(char c) {
 
 // Inputs the card number array and checks whenever its a valid card number
 int validate_card_number(const char *input) {
-    int err = 0;
     if (strlen(input)>16){
-        err = 1;
-        return err;
+        return 1;
     }else if(strlen(input)<16){
-        err = 2;
-        return err;
+        return 2;
     }
     for (int n = 0; n < 16; n++) {
         if (!(input[n] >= '0' && input[n] <= '9')) {
-            err = 3;
-            break;
+            return 3;
         }
     }
-    return err;
+    return 0;
 }
 
 // Compares the card number to min and max to see if it fits a card type
@@ -65,7 +61,7 @@ int compare_numbers(const char *card_number,const char *min,const char *max){
     int bigger_than_min = 0;
     int smaller_than_max = 0;
 
-    for(int x =0;x<strlen(min);x++){
+    for(int x = 0; x < strlen(min) ; x++){
         if(card_number[x] > min[x]){
             bigger_than_min = 1;
             break;
@@ -73,7 +69,7 @@ int compare_numbers(const char *card_number,const char *min,const char *max){
         if(card_number[x] < min[x]){
             break;
         }
-        if(x+1==strlen(min)){
+        if(x + 1 == strlen(min)){
             bigger_than_min = 1;
         }
     }
@@ -96,15 +92,13 @@ int compare_numbers(const char *card_number,const char *min,const char *max){
 
 // Checks whenever the withdraw amount is valid and accepts both dot and comma
 int validate_withdraw_amount(char *input) {
-    int err = 0;
-    int count_euros=0;
-    int count_cents=0;
-    int count_dot=0;
+    int count_euros = 0;
+    int count_cents = 0;
+    int count_dot = 0;
     int flag = 0;
     for (int n = 0; n < strlen(input); n++) {
         if (!(input[n] >= '0' && input[n] <= '9' || input[n] == ',' || input[n] == '.')) {
-            err = 1;
-            break;
+            return 1;
         }else{
             if((input[n] == ',' || input[n] == '.') && count_dot<=1 ){
                 count_dot++;
@@ -114,14 +108,12 @@ int validate_withdraw_amount(char *input) {
             }else if(flag == 1 && count_cents<2) {
                 count_cents++;
             }else{
-                err = 1;
-                break;
+                return 1;
             }
         }
     }
     if(count_euros==0){
-        err = 1;
-        return err;
+        return 1;
     }
     if(count_dot == 0){
         input[(count_euros)] = '.';
@@ -134,7 +126,7 @@ int validate_withdraw_amount(char *input) {
             input[(count_euros + 2)] = '0';
         }
     }
-    return err;
+    return 0;
 }
 
 // asks the user to input the card number
