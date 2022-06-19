@@ -1,26 +1,29 @@
 /*
 Funkcionāli:
 
-Ievadot korektu kartes numuru kas nav atrodams iekš file.txt (piem. 6100000000000000), netiek paradīts kļūdas ziņojums (No uzdevuma nostadnes:
-    Ja kartes numurs ievadīts nekorekti, uz ekrāna izvadīt atbilstošu paziņojumu un atgriezties pie kartes numura ievades.)         Done
+Uzdevuma risināšanā lūdzu neizmantot "string" un "long long" tipus; goto; malloc.
 
-Ievadot derīgu kartes numuru un maksimāli garu summu (1234.56) trans.txt failā netiek saglabats kartes numurs (veidojas šādi ieraksti: VISA 1234.56)
-                                                                                                                                    Done
+Pievienotajā .txt failā atrodas karšu numuru tabula, kurā atrodas sekojoši lauki: 1. Range Start; 2. Range End; 3 Name.
 
-Pārsniedzot atļauto sumams garumu, netiek paradīts kļudas ziņojums, bet summa tiek pieņemta un saglabāta failā nogriežot ‘lieko’ daļu: 1234.567 -> 1234.56 un nesaglābajot kartes numuru
-    (sk. #2). Tas pats ar pārāk īsām summām, bez daļas aiz komata: piem 2, 20, 200, 2000                                            Done
-Ievadot ‘too long’ kartes numuru (piem. 2048-byte long ciparu virkni) programma nokrešo.
+[Range Start] un [Range End] lauki var būt no 1 līdz 16 simbolu (ciparu) gari.
 
-Pie tukša file.txt faila, vai arī ja failā ir nekorekti ieraksti (piem. Nav low-high range i.e. ;;VISA; ) netiek izvadīts kļūdas paziņojums.
-                                                                                                                                    Done
+Programmas uzdevums būtu sekojošs:
 
+1. Pieprasīt ievadīt 16 ciparus garu kartes numuru.
 
-Par kodu:
+    Kartes numura ievadei, pārbaudei un apstrādei jāizmanto char[n] tips (simbolu masīvs), lai pārbaudītu zināšanas par masīviem un norādēm (pointer).
 
-Būtu jāizvaidās no float/double/... datu tipu izmantošanas. Jāoperē ar texta datiem                                                 Done
-Iekš get_card_number(): scanf("%s", buf); netiek ierobežots nolasāmo datu garums, kas neļauj pasargāties pret buffer overflow.      Done
-Iekš main(): file_pointer netiek aizvērts pēc darbības pabeigšanas.                                                                 Done
-length_of_char() funkcijas vietā varēja izmantot standarta strlen() ? vai ir kaut kādas īpatnības, ko standarta funkcija nedara?    Done
+    Ja kartes numurs ievadīts nekorekti, uz ekrāna izvadīt atbilstošu paziņojumu un atgriezties pie kartes numura ievades.
+
+2. Pārbaudīt, vai ieraksts, kas atbilst ievadītajam kartes numuram, atrodams teksta failā (pārbaudīt pēc ievadītā numura pirmajiem n cipariem, kur n=ciparu skaits attiecīgajā kolonā failā file.txt). Piemēram, faila pirmā rinda satur sekojošu informāciju:"400000000000;499999999999;VISA;" Tas nozīmē, ka ievadītais kartes numurs atbilst šai rindai, ja skaitlis, kas atbilst tā pirmajiem 12 cipariem >=400000000000 un <=499999999999. Ja ievadītais numurs neatbilst nevienai rindai failā, 2 sekundes uz ekrāna parādīt brīvi izvēlētu kļūdas paziņojumu un atgriezties uz punktu 1.
+
+3. Pieprasīt ievadīt summu formātā "nnnn.mm", kur nnnn- 1 līdz 4 ciparu gara summa eiro, bet mm - 2 ciparu summa centos.
+
+    Ja summa ievadīta nekorekti, uz ekrāna izvadīt atbilstošu paziņojumu un atgriezties pie summa ievades.
+
+4. Saglabāt failā "trans.txt" ievadīto kartes numuru, numuram atbilstošo "Name" lauku no file.txt un ievadīto summu.
+
+5. Atgriezties uz punktu 1.
  */
 
 #include <stdio.h>
